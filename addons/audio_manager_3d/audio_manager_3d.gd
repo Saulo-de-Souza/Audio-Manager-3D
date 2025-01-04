@@ -50,45 +50,38 @@ func play_audio(audio_name: String) -> void:
 	var use_clipper: bool = audio.get_meta("use_clipper") as bool
 	var loop: bool = audio.get_meta("loop") as bool
 
-	## TODO: Ver a logica de para o audio quando polyphony for maior que 1
-	#if audio.playing:
-		#audio.stop()
-	
-	if not timer.is_connected("timeout", _on_timer_timeout):
+	if duration < 0:
+		return
+		
+	timer.one_shot = not loop
+	timer.wait_time = duration
+
+	if not timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(audio_name)):
 		timer.timeout.connect(Callable(self, "_on_timer_timeout").bind(audio_name))
 
-	if loop:
-		timer.one_shot = false
-	else:
-		timer.one_shot = true
-	
-	timer.wait_time = duration
-	
 	if use_clipper:
 		audio.play(start_time)
 	else:
 		audio.play()
-		
+
 	timer.start()
 	pass
-	
-	
+
+
+## Timer timeout: Reestart audio
 func _on_timer_timeout(audio_name: String) -> void:
 	var audio: AudioStreamPlayer3D = audios_dictionary[audio_name] as AudioStreamPlayer3D
 	var timer: Timer = audio.get_meta("timer") as Timer
 	var loop: bool = audio.get_meta("loop") as bool
 
-	if not loop:
+	if loop:
+		play_audio(audio_name)
+	else:
 		audio.stop()
-		if timer.is_connected("timeout", _on_timer_timeout):
+		if timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(audio_name)):
 			timer.timeout.disconnect(Callable(self, "_on_timer_timeout").bind(audio_name))
-		if not timer.is_stopped():
-			timer.stop()
-		return
-
-	play_audio(audio_name)
 	pass
-	
+
 	
 ## Pause audio by name
 func pause_audio(audio_name: String) -> void:
