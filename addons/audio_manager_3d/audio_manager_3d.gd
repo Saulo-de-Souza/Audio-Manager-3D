@@ -142,3 +142,10 @@ func continue_all() -> void:
 ## Get audio by name
 func get_audio(audio_name: String) -> AudioStreamPlayer3D:
 	return audios_dictionary.get(audio_name, null)
+
+
+func get_audio_resource(audio_name: String) -> Audio:
+	for a in audios:
+		if a.name == audio_name:
+			return a
+	return null
