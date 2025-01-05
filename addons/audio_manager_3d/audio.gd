@@ -167,7 +167,7 @@ func _define_duration() -> void:
 
 
 func _warning_start_time_with_end_time() -> void:
-	if stream and use_clipper and start_time > end_time:
+	if Engine.is_editor_hint() and stream and use_clipper and start_time > end_time:
 		push_warning("Start time cannot be greater than end time in Audio resource: %s" % audio_name)
 	pass
 
@@ -183,7 +183,7 @@ func _warning_property_null(value: Variant, property_string: String) -> void:
 	
 	
 func _warning_duration_zero() -> void:
-	if stream and duration <= 0:
+	if Engine.is_editor_hint() and stream and duration <= 0:
 		push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET.")
 
 	pass

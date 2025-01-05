@@ -16,7 +16,9 @@ func _ready() -> void:
 func _init_audios() -> void:
 	for a in audios:
 		if not _check_audio(a): return
-			
+		
+		_warning_audio(a)
+		
 		var new_audio_stream_player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
 		new_audio_stream_player.stream = a.stream
 		new_audio_stream_player.volume_db = a.volume_db
@@ -174,3 +176,9 @@ func get_audio_resource(_audio_name: String) -> Audio:
 		if a.audio_name == _audio_name:
 			return a
 	return null
+
+
+func _warning_audio(_audio: Audio) -> void:
+	if _audio.duration <= 0.0: push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET. (%s)" % _audio.audio_name)
+	if _audio.start_time > _audio.end_time: push_warning("Start time cannot be greater than end time in Audio resource: (%s)" % _audio.audio_name)
+	pass
