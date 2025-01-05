@@ -15,6 +15,8 @@ func _ready() -> void:
 ## Init audios instances
 func _init_audios() -> void:
 	for a in audios:
+		if not _check_audio(a): return
+			
 		var new_audio_stream_player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
 		new_audio_stream_player.stream = a.stream
 		new_audio_stream_player.volume_db = a.volume_db
@@ -33,17 +35,28 @@ func _init_audios() -> void:
 		new_audio_stream_player.set_meta("timer", Timer.new())
 		new_audio_stream_player.set_meta("time_remain", 0.0)
 		
-		audios_dictionary[a.name] = new_audio_stream_player
+		audios_dictionary[a.audio_name] = new_audio_stream_player
 		add_child(new_audio_stream_player)
 		add_child(new_audio_stream_player.get_meta("timer"))
 		
-		if a.auto_play: play_audio(a.name)
+		if a.auto_play: play_audio(a.audio_name)
 	pass
 
 
+func _check_audio(_audio: Audio) -> bool:
+	if not _audio:
+		push_warning("You have to define an audio file.")
+		return false
+	else:
+		return true
+	
 ## Play audio by name
-func play_audio(audio_name: String) -> void:
-	var audio: AudioStreamPlayer3D = audios_dictionary[audio_name] as AudioStreamPlayer3D
+func play_audio(_audio_name: String) -> void:
+	if not get_audio(_audio_name):
+		push_warning("Audio name (%s) not found."%_audio_name)
+		return
+		
+	var audio: AudioStreamPlayer3D = get_audio(_audio_name) as AudioStreamPlayer3D
 	var timer: Timer = audio.get_meta("timer") as Timer
 	var start_time: float = audio.get_meta("start_time") as float
 	var duration: float = audio.get_meta("duration") as float
@@ -54,10 +67,10 @@ func play_audio(audio_name: String) -> void:
 		return
 		
 	timer.one_shot = not loop
-	timer.wait_time = duration
+	timer.wait_time = max(duration, 0.00001)
 
-	if not timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(audio_name)):
-		timer.timeout.connect(Callable(self, "_on_timer_timeout").bind(audio_name))
+	if not timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(_audio_name)):
+		timer.timeout.connect(Callable(self, "_on_timer_timeout").bind(_audio_name))
 
 	if use_clipper:
 		audio.play(start_time)
@@ -69,23 +82,27 @@ func play_audio(audio_name: String) -> void:
 
 
 ## Timer timeout: Reestart audio
-func _on_timer_timeout(audio_name: String) -> void:
-	var audio: AudioStreamPlayer3D = audios_dictionary[audio_name] as AudioStreamPlayer3D
+func _on_timer_timeout(_audio_name: String) -> void:
+	var audio: AudioStreamPlayer3D = get_audio(_audio_name) as AudioStreamPlayer3D
 	var timer: Timer = audio.get_meta("timer") as Timer
 	var loop: bool = audio.get_meta("loop") as bool
 
 	if loop:
-		play_audio(audio_name)
+		play_audio(_audio_name)
 	else:
 		audio.stop()
-		if timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(audio_name)):
-			timer.timeout.disconnect(Callable(self, "_on_timer_timeout").bind(audio_name))
+		if timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(_audio_name)):
+			timer.timeout.disconnect(Callable(self, "_on_timer_timeout").bind(_audio_name))
 	pass
 
 	
 ## Pause audio by name
-func pause_audio(audio_name: String) -> void:
-	var audio: AudioStreamPlayer3D = audios_dictionary[audio_name] as AudioStreamPlayer3D
+func pause_audio(_audio_name: String) -> void:
+	if not get_audio(_audio_name):
+		push_warning("Audio name (%s) not found."%_audio_name)
+		return
+		
+	var audio: AudioStreamPlayer3D = get_audio(_audio_name) as AudioStreamPlayer3D
 	var timer: Timer = audio.get_meta("timer") as Timer
 	audio.stream_paused = true
 	audio.set_meta("time_remain", timer.time_left)
@@ -94,8 +111,12 @@ func pause_audio(audio_name: String) -> void:
 	
 	
 ## Playe audio by name
-func continue_audio(audio_name: String) -> void:
-	var audio: AudioStreamPlayer3D = audios_dictionary[audio_name] as AudioStreamPlayer3D
+func continue_audio(_audio_name: String) -> void:
+	if not get_audio(_audio_name):
+		push_warning("Audio name (%s) not found."%_audio_name)
+		return
+		
+	var audio: AudioStreamPlayer3D = get_audio(_audio_name) as AudioStreamPlayer3D
 	var timer: Timer = audio.get_meta("timer") as Timer
 	audio.stream_paused = false
 	timer.start(audio.get_meta("time_remain"))
@@ -103,8 +124,12 @@ func continue_audio(audio_name: String) -> void:
 	
 
 ## Stop audio by name
-func stop_audio(audio_name: String) -> void:
-	var audio: AudioStreamPlayer3D = audios_dictionary[audio_name] as AudioStreamPlayer3D
+func stop_audio(_audio_name: String) -> void:
+	if not get_audio(_audio_name):
+		push_warning("Audio name (%s) not found."%_audio_name)
+		return
+		
+	var audio: AudioStreamPlayer3D = get_audio(_audio_name) as AudioStreamPlayer3D
 	var timer: Timer = audio.get_meta("timer") as Timer
 	timer.stop()
 	audio.stop()
@@ -114,38 +139,38 @@ func stop_audio(audio_name: String) -> void:
 ## Play all audios
 func play_all() -> void:
 	for a in audios:
-		play_audio(a.name)
+		play_audio(a.audio_name)
 	pass
 	
 
 ## Stop all audios
 func stop_all() -> void:
 	for a in audios:
-		stop_audio(a.name)
+		stop_audio(a.audio_name)
 	pass
 	
 
 ## Pause all audios
 func pause_all() -> void:
 	for a in audios:
-		pause_audio(a.name)
+		pause_audio(a.audio_name)
 	pass
 	
 
 ## Continue all audios
 func continue_all() -> void:
 	for a in audios:
-		continue_audio(a.name)
+		continue_audio(a.audio_name)
 	pass
 	
 
 ## Get audio by name
-func get_audio(audio_name: String) -> AudioStreamPlayer3D:
-	return audios_dictionary.get(audio_name, null)
+func get_audio(_audio_name: String) -> AudioStreamPlayer3D:
+	return audios_dictionary.get(_audio_name, null)
 
 
-func get_audio_resource(audio_name: String) -> Audio:
+func get_audio_resource(_audio_name: String) -> Audio:
 	for a in audios:
-		if a.name == audio_name:
+		if a.audio_name == _audio_name:
 			return a
 	return null
