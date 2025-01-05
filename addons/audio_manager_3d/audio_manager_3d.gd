@@ -179,6 +179,7 @@ func get_audio_resource(_audio_name: String) -> Audio:
 
 
 func _warning_audio(_audio: Audio) -> void:
-	if _audio.duration <= 0.0: push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET. (%s)" % _audio.audio_name)
-	if _audio.start_time > _audio.end_time: push_warning("Start time cannot be greater than end time in Audio resource: (%s)" % _audio.audio_name)
+	if not _audio.stream: push_warning("The STREAM property cannot be null. (%s)"%_audio.audio_name)
+	if _audio.stream and _audio.duration <= 0.0: push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET. (%s)" % _audio.audio_name)
+	if _audio.use_clipper and _audio.start_time > _audio.end_time: push_warning("Start time cannot be greater than end time in Audio resource: (%s)" % _audio.audio_name)
 	pass
