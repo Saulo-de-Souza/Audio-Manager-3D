@@ -61,7 +61,7 @@ func _check_audio(_audio: Audio) -> bool:
 		push_warning("Audio resource or its stream is not properly defined.")
 		return false
 	if _audio.start_time > _audio.end_time:
-		push_warning("Audio start time cannot be greater than end time for '%s'." % _audio.audio_name)
+		push_warning("Audio start time cannot be greater than end time for '%s'. Audio deleted from ManagerList." % _audio.audio_name)
 		return false
 	return true
 
