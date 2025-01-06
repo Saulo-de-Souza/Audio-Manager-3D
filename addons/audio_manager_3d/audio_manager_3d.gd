@@ -1,7 +1,9 @@
 class_name AudioManager3D extends Node3D
 
+
 ## Audios Stream Player 3D
 @export var audios: Array[Audio] = []
+
 
 ## Dictionary for audios
 var audios_dictionary: Dictionary = {}
