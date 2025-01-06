@@ -140,13 +140,6 @@ var duration: float = 0.0:
 		_warning_property_null(panning_strength, "PANNING_STRENGTH")
 		
 
-func _increment_loop() -> float:
-	if loop:
-		return 0.01
-	else:
-		return 0.0
-		
-
 func _increment_loop_offset() -> float:
 	if loop:
 		return loop_offset
@@ -156,12 +149,12 @@ func _increment_loop_offset() -> float:
 
 func _define_duration() -> void:
 	if use_clipper:
-		duration = max(((end_time - start_time) - _increment_loop() - _increment_loop_offset()) / pitch_scale, 0.0)
+		duration = max(((end_time - start_time) - _increment_loop_offset()) / pitch_scale, 0.0)
 	else:
 		if not is_instance_valid(stream):
 			duration = 0.0
 		else:
-			duration = (stream.get_length() - _increment_loop() - _increment_loop_offset()) / pitch_scale
+			duration = max((stream.get_length() - _increment_loop_offset()) / pitch_scale, 0.0)
 	_warning_duration_zero()
 	pass
 
