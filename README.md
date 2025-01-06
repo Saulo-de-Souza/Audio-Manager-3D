@@ -75,6 +75,10 @@ AudioManager3D.pause_all()
 AudioManager3D.continue_all()
 ```
 
+![Screenshot 1](./addons/audio_manager_3d/images/screenshots/screenshot_1.png)
+
+![Screenshot 2](./addons/audio_manager_3d/images/screenshots/screenshot_2.png)
+
 ## Installation
 
 1. Download the plugin.
