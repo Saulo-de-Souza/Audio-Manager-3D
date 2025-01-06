@@ -149,7 +149,10 @@ func _increment_loop_offset() -> float:
 
 func _define_duration() -> void:
 	if use_clipper:
-		duration = min(max(((end_time - start_time) - _increment_loop_offset()) / pitch_scale, 0.0), stream.get_length())
+		if stream:
+			duration = min(max(((end_time - start_time) - _increment_loop_offset()) / pitch_scale, 0.0), stream.get_length())
+		else:
+			duration = 0.0
 	else:
 		if not is_instance_valid(stream):
 			duration = 0.0
