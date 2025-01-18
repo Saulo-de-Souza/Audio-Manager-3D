@@ -4,6 +4,10 @@
 class_name Audio extends Resource
 
 
+var _warning_duration: int = 0
+var _can_warning_duration: bool = false
+
+
 ## Audio duration
 var duration: float = 0.0:
 	set(value):
@@ -179,7 +183,13 @@ func _warning_property_null(value: Variant, property_string: String) -> void:
 	
 	
 func _warning_duration_zero() -> void:
-	if Engine.is_editor_hint() and stream and duration <= 0:
+	if _warning_duration >= 7:
+		if not _can_warning_duration:
+			_can_warning_duration = true
+	else:
+		_warning_duration += 1
+		
+	if _can_warning_duration and Engine.is_editor_hint() and stream and duration <= 0:
 		push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET.")
 
 	pass
