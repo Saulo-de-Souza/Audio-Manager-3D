@@ -4,11 +4,6 @@
 class_name Audio extends Resource
 
 
-var _warning_1: int = 0
-var _warning_2: int = 0
-var _warning_3: int = 0
-
-
 ## Audio duration
 var duration: float = 0.0:
 	set(value):
@@ -168,31 +163,23 @@ func _define_duration() -> void:
 
 
 func _warning_start_time_with_end_time() -> void:
-	if _warning_1 >= 2:
-		if Engine.is_editor_hint() and stream and use_clipper and start_time > end_time:
-			push_warning("Start time cannot be greater than end time in Audio resource: %s" % audio_name)
-	else:
-		_warning_1 += 1
+	if Engine.is_editor_hint() and stream and use_clipper and start_time > end_time:
+		push_warning("Start time cannot be greater than end time in Audio resource: %s" % audio_name)
 	pass
 
 
 func _warning_property_null(value: Variant, property_string: String) -> void:
-	if _warning_2 >= 2:
-		if value is String:
-			if value == "":
-				push_warning("The %s parameter cannot be null or empty. (%s)" % [property_string, audio_name])
-		else:
-			if value == null:
-				push_warning("The %s parameter cannot be null or empty. (%s)" % [property_string, audio_name])
+	if value is String:
+		if value == "":
+			push_warning("The %s parameter cannot be null or empty. (%s)" % [property_string, audio_name])
 	else:
-		_warning_2 += 1
+		if value == null:
+			push_warning("The %s parameter cannot be null or empty. (%s)" % [property_string, audio_name])
 	pass
 	
 	
 func _warning_duration_zero() -> void:
-	if _warning_3 >= 2:
-		if Engine.is_editor_hint() and stream and duration <= 0:
-			push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET.")
-	else:
-		_warning_3 += 1
+	if Engine.is_editor_hint() and stream and duration <= 0:
+		push_warning("The audio duration cannot be less than or equal to zero. Check the properties: START_TIME, END_TIME and LOOP_OFFSET.")
+
 	pass
