@@ -2,7 +2,7 @@ class_name AudioManager3D extends Node3D
 
 
 ## Audios Stream Player 3D
-@export var audios: Array[Audio] = []
+@export var audios: Array[AudioMangerResource] = []
 
 
 ## Dictionary for audios
@@ -22,12 +22,11 @@ func _init_audios() -> void:
 
 		_warning_audio(a)
 
-		var new_audio_stream_player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+		var new_audio_stream_player: AudioManagerController = AudioManagerController.new(a.start_time, a.duration, a.use_clipper, a.loop, 0.0, false)
 		_setup_audio_properties(new_audio_stream_player, a)
 
 		audios_dictionary[a.audio_name] = new_audio_stream_player
 		add_child(new_audio_stream_player)
-		add_child(new_audio_stream_player.get_meta("timer"))
 
 		if a.duration > 0 and a.auto_play:
 			play_audio(a.audio_name)
@@ -35,8 +34,8 @@ func _init_audios() -> void:
 
 
 ## Setup properties for a new AudioStreamPlayer3D
-func _setup_audio_properties(audio: AudioStreamPlayer3D, a: Audio) -> void:
-	audio.stream = a.stream
+func _setup_audio_properties(audio: AudioStreamPlayer3D, a: AudioMangerResource) -> void:
+	audio.stream = a.audio_stream
 	audio.volume_db = a.volume_db
 	audio.max_db = a.max_db
 	audio.pitch_scale = a.pitch_scale
@@ -44,24 +43,16 @@ func _setup_audio_properties(audio: AudioStreamPlayer3D, a: Audio) -> void:
 	audio.unit_size = a.unit_size
 	audio.max_polyphony = a.max_polyphony
 	audio.panning_strength = a.panning_strength
-
-	audio.set_meta("start_time", a.start_time)
-	audio.set_meta("end_time", a.end_time)
-	audio.set_meta("duration", a.duration)
-	audio.set_meta("use_clipper", a.use_clipper)
-	audio.set_meta("loop", a.loop)
-	audio.set_meta("timer", Timer.new())
-	audio.set_meta("time_remain", 0.0)
 	pass
 
 
 ## Validate audio resource
-func _check_audio(_audio: Audio) -> bool:
-	if not _audio or not _audio.stream:
-		push_warning("Audio resource or its stream is not properly defined.")
+func _check_audio(_audio: AudioMangerResource) -> bool:
+	if not _audio or not _audio.audio_stream:
+		push_warning("AudioMangerResource resource or its stream is not properly defined.")
 		return false
 	if _audio.start_time > _audio.end_time:
-		push_warning("Audio start time cannot be greater than end time for '%s'. Audio deleted from ManagerList." % _audio.audio_name)
+		push_warning("AudioMangerResource start time cannot be greater than end time for '%s'. AudioMangerResource deleted from ManagerList." % _audio.audio_name)
 		return false
 	return true
 
@@ -72,15 +63,13 @@ func play_audio(_audio_name: String) -> void:
 	if not audio:
 		return
 		
-	if float(audio.get_meta("duration")) <= 0.0:
+	if float(audio.duration) <= 0.0:
 		return
 
 	var timer: Timer = setup_timer(_audio_name)
-	var start_time: float = audio.get_meta("start_time") as float
-	var use_clipper: bool = audio.get_meta("use_clipper") as bool
 
-	if use_clipper:
-		audio.play(start_time)
+	if audio.use_clipper:
+		audio.play(audio.start_time)
 	else:
 		audio.play()
 
@@ -88,28 +77,15 @@ func play_audio(_audio_name: String) -> void:
 	pass
 
 
-## Timer timeout: Restart or stop audio
-func _on_timer_timeout(_audio_name: String) -> void:
-	var audio = validate_audio(_audio_name)
-	if not audio:
-		return
-
-	if audio.get_meta("loop"):
-		play_audio(_audio_name)
-	else:
-		audio.stop()
-	pass
-
-
 ## Pause audio by name
 func pause_audio(_audio_name: String) -> void:
 	var audio = validate_audio(_audio_name)
-	if not audio:
+	if not audio or audio.stream_paused:
 		return
 
-	var timer: Timer = audio.get_meta("timer") as Timer
+	var timer: Timer = audio.timer as Timer
 	audio.stream_paused = true
-	audio.set_meta("time_remain", timer.time_left)
+	audio.time_remain = timer.time_left
 	timer.stop()
 	pass
 
@@ -117,62 +93,74 @@ func pause_audio(_audio_name: String) -> void:
 ## Continue audio by name
 func continue_audio(_audio_name: String) -> void:
 	var audio = validate_audio(_audio_name)
-	if not audio:
+	if not audio or not audio.stream_paused:
 		return
 
-	var timer: Timer = audio.get_meta("timer") as Timer
+	var timer: Timer = audio.timer as Timer
 	audio.stream_paused = false
-	timer.start(audio.get_meta("time_remain"))
+	timer.start(audio.time_remain)
 	pass
 
 
 ## Stop audio by name
 func stop_audio(_audio_name: String) -> void:
 	var audio = validate_audio(_audio_name)
-	if not audio:
+	if not audio or not audio.playing:
 		return
 
-	var timer: Timer = audio.get_meta("timer") as Timer
-	timer.stop()
+	audio.timer.stop()
 	audio.stop()
 	pass
 
 
 ## Validate and return audio by name
-func validate_audio(_audio_name: String) -> AudioStreamPlayer3D:
-	var audio = get_audio(_audio_name)
+func validate_audio(_audio_name: String) -> AudioManagerController:
+	var audio = _get_audio_controller(_audio_name)
 	if not audio:
-		push_warning("Audio name (%s) not found." % _audio_name)
+		push_warning("AudioMangerResource name (%s) not found." % _audio_name)
 	return audio
 
 
 ## Setup timer for audio
 func setup_timer(_audio_name: String) -> Timer:
-	var audio = get_audio(_audio_name) as AudioStreamPlayer3D
-	var timer: Timer = audio.get_meta("timer") as Timer
-	var duration: float = audio.get_meta("duration") as float
-	var loop: bool = audio.get_meta("loop") as bool
+	var audio = _get_audio_controller(_audio_name) as AudioManagerController
 
-	timer.one_shot = not loop
-	timer.wait_time = max(duration, 0.00001)
-	if not timer.is_connected("timeout", Callable(self, "_on_timer_timeout").bind(_audio_name)):
-		timer.timeout.connect(Callable(self, "_on_timer_timeout").bind(_audio_name))
-	return timer
+	audio.timer.one_shot = not audio.loop
+	audio.timer.wait_time = max(audio.duration, 0.00001)
+
+	if not audio.is_timer_connected:
+		audio.timer.timeout.connect(Callable(_on_timer_timeout).bind(audio, _audio_name, func(): play_audio(_audio_name)))
+		audio.is_timer_connected = true
+	return audio.timer
+
+
+func _on_timer_timeout(_audio: AudioManagerController, _audio_name: String, cb: Callable) -> void:
+
+	if _audio.loop:
+		cb.call()
+	else:
+		_audio.stop()
+
+	pass
 
 
 ## Get audio by name
-func get_audio(_audio_name: String) -> AudioStreamPlayer3D:
-	return audios_dictionary.get(_audio_name, null) as AudioStreamPlayer3D
+func _get_audio_controller(_audio_name: String) -> AudioManagerController:
+	return audios_dictionary.get(_audio_name, null) as AudioManagerController
+
+
+func get_audio_player(_audio_name: String) -> AudioStreamPlayer3D:
+	return _get_audio_controller(_audio_name)
 
 
 ## Display warnings for audio
-func _warning_audio(_audio: Audio) -> void:
-	if not _audio.stream:
+func _warning_audio(_audio: AudioMangerResource) -> void:
+	if not _audio.audio_stream:
 		push_warning("The STREAM property cannot be null. (%s)" % _audio.audio_name)
 	if _audio.duration <= 0.0:
-		push_warning("Audio duration cannot be less than or equal to zero. Check START_TIME, END_TIME. (%s)" % _audio.audio_name)
+		push_warning("AudioMangerResource duration cannot be less than or equal to zero. Check START_TIME, END_TIME. (%s)" % _audio.audio_name)
 	if _audio.use_clipper and _audio.start_time > _audio.end_time:
-		push_warning("Start time cannot be greater than end time in Audio resource: (%s)" % _audio.audio_name)
+		push_warning("Start time cannot be greater than end time in AudioMangerResource resource: (%s)" % _audio.audio_name)
 	pass
 
 
@@ -204,10 +192,35 @@ func continue_all() -> void:
 	pass
 
 
-## Get audio resource (Audio)
-func get_audio_resource(_audio_name: String) -> Audio:
+## Get audio resource (AudioMangerResource)
+func get_audio_resource(_audio_name: String) -> AudioMangerResource:
 	for aud in audios:
 		if aud.audio_name == _audio_name:
 			return aud
-	push_warning("Audio %s not find."%_audio_name)
+	push_warning("AudioMangerResource %s not find."%_audio_name)
 	return null
+
+
+# Class AudiPlayer3D================================
+class AudioManagerController extends AudioStreamPlayer3D:
+	var timer: Timer
+	var start_time: float
+	var duration: float
+	var use_clipper: bool
+	var loop: bool
+	var time_remain: float
+	var is_timer_connected: bool
+	pass
+
+	func _init(_start_time: float, _duration: float, _use_clipper: bool, _loop: bool, _time_remain: float, _is_timer_connected: bool) -> void:
+		timer = Timer.new()
+		timer.name = "timer"
+		add_child(timer)
+		
+		self.start_time = _start_time
+		self.duration = _duration
+		self.use_clipper = _use_clipper
+		self.loop = _loop
+		self.time_remain = _time_remain
+		self.is_timer_connected = _is_timer_connected
+		pass
