@@ -118,7 +118,7 @@ func stop_audio(_audio_name: String) -> void:
 
 ## Validate and return audio by name
 func _validate_audio(_audio_name: String) -> AudioManagerController:
-	var audio = get_audio_controller(_audio_name)
+	var audio = _get_audio_controller(_audio_name)
 	if not audio:
 		push_warning("AudioMangerResource name (%s) not found." % _audio_name)
 	return audio
@@ -126,7 +126,7 @@ func _validate_audio(_audio_name: String) -> AudioManagerController:
 
 ## Setup timer for audio
 func _setup_timer(_audio_name: String) -> Timer:
-	var audio = get_audio_controller(_audio_name) as AudioManagerController
+	var audio = _get_audio_controller(_audio_name) as AudioManagerController
 
 	audio.timer.one_shot = not audio.loop
 	audio.timer.wait_time = max(audio.duration, 0.00001)
@@ -145,7 +145,7 @@ func _on_timer_timeout(_audio: AudioManagerController, _audio_name: String, cb: 
 	pass
 
 
-func get_audio_controller(_audio_name: String) -> AudioManagerController:
+func _get_audio_controller(_audio_name: String) -> AudioManagerController:
 	return audios_dictionary.get(_audio_name, null) as AudioManagerController
 
 
