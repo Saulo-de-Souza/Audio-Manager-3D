@@ -9,6 +9,8 @@ var _can_warning_duration: bool = false
 var _waring_starttime_endtime: int = 0
 var _can_warning_starttime_endtime: bool = false
 
+var _owner: AudioManagerController = null
+
 ## Audio duration
 var duration: float = 0.0:
 	set(value):
@@ -29,6 +31,9 @@ var duration: float = 0.0:
 		audio_stream = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(audio_stream, "STREAM")
+		if is_instance_valid(_owner):
+			_owner.stream = value
+			_owner.duration = duration
 			
 			
 ## Enable or disable clipper in audio.
@@ -39,6 +44,9 @@ var duration: float = 0.0:
 		_warning_start_time_with_end_time()
 		_warning_property_null(use_clipper, "USE_CLIPPER")
 		_define_duration()
+		if is_instance_valid(_owner):
+			_owner.use_clipper = value
+			_owner.duration = duration
 
 
 ## Start time of audio in seconds when use_clipper is true. 
@@ -49,6 +57,9 @@ var duration: float = 0.0:
 		_warning_start_time_with_end_time()
 		_warning_property_null(start_time, "START_TIME")
 		_define_duration()
+		if is_instance_valid(_owner):
+			_owner.start_time = value
+			_owner.duration = duration
 		
 		
 ## End time of audio in seconds when use_clipper is true. 
@@ -59,6 +70,8 @@ var duration: float = 0.0:
 		_warning_start_time_with_end_time()
 		_warning_property_null(end_time, "END_TIME")
 		_define_duration()
+		if is_instance_valid(_owner):
+			_owner.duration = duration
 		
 
 ## Set Volume Db
@@ -67,6 +80,8 @@ var duration: float = 0.0:
 		volume_db = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(volume_db, "VOLUME_DB")
+		if is_instance_valid(_owner):
+			_owner.volume_db = value
 
 
 ## Set Max Db
@@ -75,6 +90,8 @@ var duration: float = 0.0:
 		max_db = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(max_db, "MAX_DB")
+		if is_instance_valid(_owner):
+			_owner.max_db = value
 
 
 ## Set Pitch Scale
@@ -84,6 +101,9 @@ var duration: float = 0.0:
 		_warning_start_time_with_end_time()
 		_warning_property_null(pitch_scale, "PITCH_SCALE")
 		_define_duration()
+		if is_instance_valid(_owner):
+			_owner.pitch_scale = value
+			_owner.duration = duration
 		
 
 ## Set Max Distance
@@ -92,6 +112,8 @@ var duration: float = 0.0:
 		max_distance = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(max_distance, "MAX_DISTANCE")
+		if is_instance_valid(_owner):
+			_owner.max_distance = value
 
 
 ## Set Unit Size
@@ -100,6 +122,8 @@ var duration: float = 0.0:
 		unit_size = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(unit_size, "UNIT_SIZE")
+		if is_instance_valid(_owner):
+			_owner.unit_size = value
 
 
 ## Set Loop
@@ -109,6 +133,9 @@ var duration: float = 0.0:
 		_warning_start_time_with_end_time()
 		_warning_property_null(loop, "LOOP")
 		_define_duration()
+		if is_instance_valid(_owner):
+			_owner.loop = value
+			_owner.duration = duration
 		
 		
 ## Audio rewinds in seconds when looping.
@@ -119,6 +146,8 @@ var duration: float = 0.0:
 		_warning_start_time_with_end_time()
 		_warning_property_null(loop_offset, "LOOP_OFFSET")
 		_define_duration()
+		if is_instance_valid(_owner):
+			_owner.duration = duration
 		
 		
 ## Play the audio as soon as you enter the scene.
@@ -135,6 +164,8 @@ var duration: float = 0.0:
 		max_polyphony = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(max_polyphony, "MAX_POLYPHONY")
+		if is_instance_valid(_owner):
+			_owner.max_polyphony = value
 
 
 ## Set Panning Strength
@@ -143,6 +174,8 @@ var duration: float = 0.0:
 		panning_strength = value
 		_warning_start_time_with_end_time()
 		_warning_property_null(panning_strength, "PANNING_STRENGTH")
+		if is_instance_valid(_owner):
+			_owner.panning_strength = value
 		
 
 func _increment_loop_offset() -> float:

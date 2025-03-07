@@ -23,6 +23,9 @@ func _init_audios() -> void:
 		_warning_audio(a)
 
 		var new_audio_stream_player: AudioManagerController = AudioManagerController.new(a.start_time, a.duration, a.use_clipper, a.loop, 0.0, false)
+		
+		a._owner = new_audio_stream_player
+		
 		_setup_audio_properties(new_audio_stream_player, a)
 
 		audios_dictionary[a.audio_name] = new_audio_stream_player
@@ -59,14 +62,14 @@ func _check_audio(_audio: AudioMangerResource) -> bool:
 
 ## Play audio by name
 func play_audio(_audio_name: String) -> void:
-	var audio = validate_audio(_audio_name)
+	var audio = _validate_audio(_audio_name)
 	if not audio:
 		return
 		
 	if float(audio.duration) <= 0.0:
 		return
 
-	var timer: Timer = setup_timer(_audio_name)
+	var timer: Timer = _setup_timer(_audio_name)
 
 	if audio.use_clipper:
 		audio.play(audio.start_time)
@@ -79,7 +82,7 @@ func play_audio(_audio_name: String) -> void:
 
 ## Pause audio by name
 func pause_audio(_audio_name: String) -> void:
-	var audio = validate_audio(_audio_name)
+	var audio = _validate_audio(_audio_name)
 	if not audio or audio.stream_paused:
 		return
 
@@ -92,7 +95,7 @@ func pause_audio(_audio_name: String) -> void:
 
 ## Continue audio by name
 func continue_audio(_audio_name: String) -> void:
-	var audio = validate_audio(_audio_name)
+	var audio = _validate_audio(_audio_name)
 	if not audio or not audio.stream_paused:
 		return
 
@@ -104,7 +107,7 @@ func continue_audio(_audio_name: String) -> void:
 
 ## Stop audio by name
 func stop_audio(_audio_name: String) -> void:
-	var audio = validate_audio(_audio_name)
+	var audio = _validate_audio(_audio_name)
 	if not audio or not audio.playing:
 		return
 
@@ -114,16 +117,16 @@ func stop_audio(_audio_name: String) -> void:
 
 
 ## Validate and return audio by name
-func validate_audio(_audio_name: String) -> AudioManagerController:
-	var audio = _get_audio_controller(_audio_name)
+func _validate_audio(_audio_name: String) -> AudioManagerController:
+	var audio = get_audio_controller(_audio_name)
 	if not audio:
 		push_warning("AudioMangerResource name (%s) not found." % _audio_name)
 	return audio
 
 
 ## Setup timer for audio
-func setup_timer(_audio_name: String) -> Timer:
-	var audio = _get_audio_controller(_audio_name) as AudioManagerController
+func _setup_timer(_audio_name: String) -> Timer:
+	var audio = get_audio_controller(_audio_name) as AudioManagerController
 
 	audio.timer.one_shot = not audio.loop
 	audio.timer.wait_time = max(audio.duration, 0.00001)
@@ -135,22 +138,15 @@ func setup_timer(_audio_name: String) -> Timer:
 
 
 func _on_timer_timeout(_audio: AudioManagerController, _audio_name: String, cb: Callable) -> void:
-
 	if _audio.loop:
 		cb.call()
 	else:
 		_audio.stop()
-
 	pass
 
 
-## Get audio by name
-func _get_audio_controller(_audio_name: String) -> AudioManagerController:
+func get_audio_controller(_audio_name: String) -> AudioManagerController:
 	return audios_dictionary.get(_audio_name, null) as AudioManagerController
-
-
-func get_audio_player(_audio_name: String) -> AudioStreamPlayer3D:
-	return _get_audio_controller(_audio_name)
 
 
 ## Display warnings for audio
@@ -199,28 +195,3 @@ func get_audio_resource(_audio_name: String) -> AudioMangerResource:
 			return aud
 	push_warning("AudioMangerResource %s not find."%_audio_name)
 	return null
-
-
-# Class AudiPlayer3D================================
-class AudioManagerController extends AudioStreamPlayer3D:
-	var timer: Timer
-	var start_time: float
-	var duration: float
-	var use_clipper: bool
-	var loop: bool
-	var time_remain: float
-	var is_timer_connected: bool
-	pass
-
-	func _init(_start_time: float, _duration: float, _use_clipper: bool, _loop: bool, _time_remain: float, _is_timer_connected: bool) -> void:
-		timer = Timer.new()
-		timer.name = "timer"
-		add_child(timer)
-		
-		self.start_time = _start_time
-		self.duration = _duration
-		self.use_clipper = _use_clipper
-		self.loop = _loop
-		self.time_remain = _time_remain
-		self.is_timer_connected = _is_timer_connected
-		pass
