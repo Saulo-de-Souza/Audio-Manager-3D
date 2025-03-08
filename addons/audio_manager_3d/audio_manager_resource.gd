@@ -9,7 +9,7 @@ var _can_warning_duration: bool = false
 var _waring_starttime_endtime: int = 0
 var _can_warning_starttime_endtime: bool = false
 
-var _owner: AudioManagerController = null
+var _owner: Variant = null
 
 ## Audio duration
 var duration: float = 0.0:
